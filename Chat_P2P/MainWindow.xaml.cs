@@ -131,6 +131,8 @@ namespace Chat_P2P
                         System.Windows.MessageBox.Show("Чат начат");
                         PeerPublicKeyBox.Text = peerPublicKey;
                         IpBox.Text = senderIp;
+                        RequestChat();
+
                     }
                 }
                 else if (msg.StartsWith("MESSAGE|"))
@@ -138,7 +140,6 @@ namespace Chat_P2P
                     string decrypted = RSAHelper.Decrypt(
                         msg.Substring(8), myPrivateKey);
                     ChatBox.AppendText("Собеседник: " + decrypted + "\n");
-                    ChatBox.AppendText("Собеседник защифрованный текст: " + msg + "\n");
                     ChatBox.ScrollToEnd();
                 }
             });
