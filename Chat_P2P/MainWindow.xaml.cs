@@ -124,6 +124,7 @@ namespace Chat_P2P
             {
                 if (msg.StartsWith("CHAT_REQUEST|"))
                 {
+                    if (PeerPublicKeyBox.Text != "") return;
                     peerPublicKey = msg.Substring(13);
                     if (System.Windows.MessageBox.Show("Принять чат?", "Запрос",
                         MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -131,8 +132,6 @@ namespace Chat_P2P
                         System.Windows.MessageBox.Show("Чат начат");
                         PeerPublicKeyBox.Text = peerPublicKey;
                         IpBox.Text = senderIp;
-                        RequestChat();
-
                     }
                 }
                 else if (msg.StartsWith("MESSAGE|"))
