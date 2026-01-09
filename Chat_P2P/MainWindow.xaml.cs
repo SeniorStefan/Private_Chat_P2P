@@ -84,6 +84,7 @@ namespace Chat_P2P
 
         private void SendMessage_Click(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Text == "") return;
             if (string.IsNullOrEmpty(peerPublicKey))
             {
                 System.Windows.MessageBox.Show("Нет открытого ключа собеседника");
