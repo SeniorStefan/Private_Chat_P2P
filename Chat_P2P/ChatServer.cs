@@ -12,9 +12,9 @@ namespace Chat_P2P
     internal class ChatServer
     {
         private TcpListener listener;
-        private System.Action<string> callback;
+        private System.Action<string, string> callback;
 
-        public ChatServer(int port, System.Action<string> onMessage)
+        public ChatServer(int port, System.Action<string, string> onMessage)
         {
             listener = new TcpListener(IPAddress.Any, port);
             callback = onMessage;
@@ -34,8 +34,10 @@ namespace Chat_P2P
                 var stream = client.GetStream();
                 byte[] buffer = new byte[4096];
                 int read = stream.Read(buffer, 0, buffer.Length);
+                string message = Encoding.UTF8.GetString(buffer, 0, read);
+                string senderIp = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                 if (read > 0)
-                    callback(Encoding.UTF8.GetString(buffer, 0, read));
+                    callback(message,senderIp);
                 client.Close();
             }
         }

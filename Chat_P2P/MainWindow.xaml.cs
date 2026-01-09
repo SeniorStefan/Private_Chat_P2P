@@ -50,24 +50,35 @@ namespace Chat_P2P
 
             if (!File.Exists(publicPath) || !File.Exists(privatePath))
             {
-                System.Windows.MessageBox.Show("Ключи не найдены");
+                System.Windows.MessageBox.Show("Ключи не найдены, сгенерируйте ключи с помощью ПО Generat Key");
                 Close();
                 return;
             }
 
             myPublicKey = File.ReadAllText(publicPath);
-
-            var pw = new PasswordWindows();
-            if (pw.ShowDialog() == true)
+            bool resultTest = false;
+            do
             {
-                myPrivateKey = RSAHelper.DecryptPrivateKey(
-                    File.ReadAllText(privatePath),
-                    pw.Password);
-            }
-            else
-            {
-                Close();
-            }
+                var pw = new PasswordWindows();
+                if (pw.ShowDialog() == true)
+                {
+                    myPrivateKey = RSAHelper.DecryptPrivateKey(
+                        File.ReadAllText(privatePath),
+                        pw.Password);
+                    if (myPrivateKey != "false")
+                    {
+                        resultTest = true;
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show("Ошибка при вводе пароля, попробуйте снова.");
+                    }
+                }
+                else
+                {
+                    System.Environment.Exit(0);
+                }
+            } while (!resultTest);
         }
 
         private void StartServer()
@@ -78,11 +89,20 @@ namespace Chat_P2P
 
         private void RequestChat_Click(object sender, RoutedEventArgs e)
         {
+            RequestChat();
+        }
+
+        private void SendMessage_Click(object sender, RoutedEventArgs e)
+        {
+            SendMesssage();
+        }
+        private void RequestChat()
+        {
             peerPublicKey = PeerPublicKeyBox.Text;
             ChatClient.Send(IpBox.Text, PORT, "CHAT_REQUEST|" + myPublicKey);
         }
 
-        private void SendMessage_Click(object sender, RoutedEventArgs e)
+        private void SendMesssage()
         {
             if (MessageBox.Text == "") return;
             if (string.IsNullOrEmpty(peerPublicKey))
@@ -98,7 +118,7 @@ namespace Chat_P2P
             MessageBox.Clear();
         }
 
-        private void OnMessageReceived(string msg)
+        private void OnMessageReceived(string msg, string senderIp)
         {
             Dispatcher.Invoke(() =>
             {
@@ -109,6 +129,8 @@ namespace Chat_P2P
                         MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
                         System.Windows.MessageBox.Show("Чат начат");
+                        PeerPublicKeyBox.Text = peerPublicKey;
+                        IpBox.Text = senderIp;
                     }
                 }
                 else if (msg.StartsWith("MESSAGE|"))
@@ -116,37 +138,18 @@ namespace Chat_P2P
                     string decrypted = RSAHelper.Decrypt(
                         msg.Substring(8), myPrivateKey);
                     ChatBox.AppendText("Собеседник: " + decrypted + "\n");
+                    ChatBox.AppendText("Собеседник защифрованный текст: " + msg + "\n");
+                    ChatBox.ScrollToEnd();
                 }
             });
         }
 
-        private void LoadPublicKeyBtn_Click(object sender, RoutedEventArgs e)
+        private void Grid_KeyDown(object sender, KeyEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            switch(e.Key)
             {
-                Title = "Выберите открытый ключ RSA",
-                Filter = "RSA Public Key (*.xml)|*.xml",
-                Multiselect = false
-            };
-            if (dialog.ShowDialog() != true) return;
-            try
-            {
-                string keyXML = File.ReadAllText(dialog.FileName);
-                using (var rsa = new RSACryptoServiceProvider())
-                {
-                    rsa.FromXmlString(keyXML);
-                }
-
-                PeerPublicKeyBox.Text = keyXML;
-                System.Windows.MessageBox.Show("Открытый ключ успешно загружен.", "Ключ загружен", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (IOException ex)
-            {
-                System.Windows.MessageBox.Show("Ошибка чтения файла:\n" + ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (CryptographicException ex)
-            {
-                System.Windows.MessageBox.Show("Файл не является корректным RSA-ключом", "Ошибка ключа", MessageBoxButton.OK, MessageBoxImage.Error);
+                case Key.Enter: SendMesssage();
+                    break;
             }
         }
     }

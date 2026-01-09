@@ -29,11 +29,21 @@ namespace Chat_P2P
         {
             Password = PasswordBox.Password;
             DialogResult = true;
+            Close();
         }
 
         private void CancelBtn_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            Close();
+        }
+
+        private void Grid_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.Enter: Ok_Click(sender, e);
+                    break;
+            }
         }
     }
 }
